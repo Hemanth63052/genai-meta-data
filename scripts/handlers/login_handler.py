@@ -1,10 +1,11 @@
+from scripts.config import JWTConfig
 from scripts.exception import GenAIException
 from scripts.schemas import ReturnSuccessSchema
 from scripts.schemas.login_schemas import SignupSchema, LoginSchema, ChangePasswordSchema
 from scripts.utils.access_token_decorator import TokenDecorator
 from scripts.utils.mongo_util.user import User
 from scripts.utils.hash_util import HashUtil
-from fastapi import Response, Request
+from fastapi import Response, Request, status
 
 class LoginHandler:
 
@@ -28,9 +29,9 @@ class LoginHandler:
             HTTPException: If there is an error registering the user.
         """
         if not request_payload.email or not request_payload.password:
-            raise GenAIException("Email and password are required.")
-        if self.user_collection.find({"user_id": request_payload.email}):
-            raise GenAIException("User already exists.")
+            raise GenAIException("Email and password are required.", code=status.HTTP_400_BAD_REQUEST)
+        if self.user_collection.find_one({"email": request_payload.email}):
+            raise GenAIException("User already exists. Please login.", code=status.HTTP_400_BAD_REQUEST)
         request_payload.password = self.hash_util.hash_password(request_payload.password)
         self.user_collection.insert_one(request_payload.model_dump())
         return ReturnSuccessSchema(message="User registered successfully. Please Login")
@@ -43,6 +44,8 @@ class LoginHandler:
 
         Args:
             request_payload (LoginSchema): The payload containing the user's email and password.
+            response: Fastapi response
+            request: Fastapi request
 
         Returns:
             ResponseModel: A response model indicating the result of the login operation.
@@ -51,16 +54,19 @@ class LoginHandler:
             HTTPException: If there is an error logging in the user.
         """
         if not request_payload.email or not request_payload.password:
-            raise GenAIException("Email and password are required.")
-        user = self.user_collection.find({"user_id": request_payload.email})
+            raise GenAIException("Email and password are required.", code=status.HTTP_400_BAD_REQUEST)
+        user = self.user_collection.find_one({"email": request_payload.email})
         if not user:
-            raise GenAIException("User not found.")
+            raise GenAIException("User not found.", code=status.HTTP_404_NOT_FOUND)
         if not self.hash_util.compare_password(request_payload.password, user["password"]):
-            raise GenAIException("Invalid password.")
-        response.set_cookie(key="cookie", value=TokenDecorator().create_access_token(mail=request_payload.email, host=request.client.host), httponly=True)
+            raise GenAIException("Invalid password.", code=status.HTTP_401_UNAUTHORIZED)
+        response.set_cookie(key="access_token", value=TokenDecorator().create_access_token(mail=request_payload.email, host=request.client.host, token_time=JWTConfig.JWT_ACCESS_TOKEN_EXPIRE_MINUTES, user_id=user["user_id"]),
+                            httponly=True)
+        response.set_cookie(key="refresh_token", value=TokenDecorator().create_access_token(mail=request_payload.email, host=request.client.host, sub="refresh_token", token_time=JWTConfig.JWT_REFRESH_TOKEN_EXPIRE_MINUTES, user_id=user["user_id"]),
+                            httponly=True)
         return ReturnSuccessSchema(message="User logged in successfully.")
 
-    def logout(self, user_id):
+    def logout(self, user_id, request: Request):
         """
         Log out a user.
 
@@ -68,6 +74,7 @@ class LoginHandler:
 
         Args:
             user_id (str): The ID of the user to log out.
+            request: Fastapi request
 
         Returns:
             ResponseModel: A response model indicating the result of the logout operation.
@@ -77,8 +84,8 @@ class LoginHandler:
         """
         user = self.user_collection.find({"user_id": user_id})
         if not user:
-            raise GenAIException("User not found.")
-        TokenDecorator().delete_access_token_from_db()
+            raise GenAIException("User not found.", code=status.HTTP_404_NOT_FOUND)
+        TokenDecorator().delete_access_token_from_db(request.cookies)
         return ReturnSuccessSchema(message="User logged out successfully.")
 
     def change_password(self, request_payload:ChangePasswordSchema):
@@ -97,15 +104,15 @@ class LoginHandler:
             HTTPException: If there is an error changing the user's password.
         """
         if not request_payload.new_password:
-            raise GenAIException("New password is required.")
+            raise GenAIException("New password is required.", code=status.HTTP_400_BAD_REQUEST)
         if not request_payload.email or not request_payload.new_password:
-            raise GenAIException("Email and old password are required.")
-        user = self.user_collection.find({"user_id": request_payload.email})
+            raise GenAIException("Email and old password are required.", code=status.HTTP_400_BAD_REQUEST)
+        user = self.user_collection.find_one({"email": request_payload.email})
         if not user:
-            raise GenAIException("User not found.")
+            raise GenAIException("User not found.", code=status.HTTP_404_NOT_FOUND)
         if not self.hash_util.compare_password(request_payload.password, user["password"]):
-            raise GenAIException("Invalid Old password.")
-        self.user_collection.update_one({"user_id": request_payload.email, "password": user["password"]}, {"$set": {"password": self.hash_util.hash_password(request_payload.new_password)}})
+            raise GenAIException("Invalid Old password.", code=status.HTTP_401_UNAUTHORIZED)
+        self.user_collection.update_one({"email": request_payload.email, "password": user["password"]}, {"$set": {"password": self.hash_util.hash_password(request_payload.new_password)}})
         return ReturnSuccessSchema(message="Password changed successfully.")
 
     def delete_user(self, request_payload: LoginSchema):
@@ -125,30 +132,10 @@ class LoginHandler:
         """
         if not request_payload.email or not request_payload.password:
             raise GenAIException("Email and password are required.")
-        user = self.user_collection.find({"user_id": request_payload.email})
+        user = self.user_collection.find_one({"email": request_payload.email})
         if not user:
-            raise GenAIException("User not found.")
+            raise GenAIException("User not found.", code=status.HTTP_404_NOT_FOUND)
         if not self.hash_util.compare_password(request_payload.password, user["password"]):
-            raise GenAIException("Invalid password.")
-        self.user_collection.delete_one({"user_id": request_payload.email})
+            raise GenAIException("Invalid password.", code= status.HTTP_401_UNAUTHORIZED)
+        self.user_collection.delete_one({"email": request_payload.email})
         return ReturnSuccessSchema(message="User deleted successfully.")
-
-    def get_user(self, user_id):
-        """
-        Get user details.
-
-        This endpoint allows a user to get their account details.
-
-        Args:
-            user_id (str): The ID of the user to get details for.
-
-        Returns:
-            ResponseModel: A response model containing the user's details.
-
-        Raises:
-            HTTPException: If there is an error getting the user's details.
-        """
-        user = self.user_collection.find({"user_id": user_id})
-        if not user:
-            raise GenAIException("User not found.")
-        return ReturnSuccessSchema(data=user, message="User details retrieved successfully.")

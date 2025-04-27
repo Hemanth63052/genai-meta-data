@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+        exclude: .vscode/launch.json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: debug-statements
+      - id: detect-private-key
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-added-large-files
+        args: ['--maxkb=100']
+      - id: check-json
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.7
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+
+  - repo: local
+    hooks:
+      - id: pytest-coverage
+        name: Run tests and check coverage
+        entry: pytest
+        language: python
+        pass_filenames: false

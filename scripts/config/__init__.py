@@ -1,6 +1,10 @@
-from pydantic import Field
+import os
+
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+
+from scripts.utils.gcp_secret_manager import get_gcp_secrets
 
 load_dotenv()
 
@@ -41,10 +45,22 @@ class _JWTConfig(BaseSettings):
     JWT configuration settings.
     """
 
-    PUBLIC_KEY_PATH: str | None = None
-    PRIVATE_KEY_PATH: str | None = None
-    JWT_ALGORITHM: str = "RSA256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=10)
+    PUBLIC_KEY: str | None = None
+    PRIVATE_KEY: str | None = None
+    JWT_ALGORITHM: str = "RS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60 * 24)  # give it for 1 day
+    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = Field(default=60 * 24 * 7)  # 7 days
+
+    @model_validator(mode="before")
+    def validate_keys(cls, values):
+        if not values.get("PUBLIC_KEY") or not values.get("PRIVATE_KEY"):
+            project_name = os.environ.get("GCP_PROJECT_NAME", 'adaptiq-457516')
+            get_rsa_public_key = get_gcp_secrets("rsa-public-key", project_name)
+            get_rsa_private_key = get_gcp_secrets("rsa-private-key", project_name)
+            if get_rsa_public_key and get_rsa_private_key:
+                values["PUBLIC_KEY"] = get_rsa_public_key
+                values["PRIVATE_KEY"] = get_rsa_private_key
+        return values
 
 
 ServerConfig = _ServerConfig()

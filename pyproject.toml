@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adapt-iq-services"
+version = "1.0.0"
+description = "Services for Adapt IQ"
+authors = [{ name = "Hemanth Kumar Pasham', email = 'hemanthkumarpasham9502@gmail.com" }]
+readme = "README.md"
+requires-python = ">= 3.11"
+# Unpinned Dependencies below...
+# [Run pip-compile (or uv pip compile) to get the pinned versions in requirements.txt]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "python-dotenv",
+    "pydantic[email]",
+    "pydantic-settings",
+    "PyJWT",
+    "bcrypt",
+    "pymongo",
+    "redis",
+    "cryptography",
+    "pytest~=7.4.4",
+    "pytest-cov",
+]
+
+[tool.ruff]
+line-length = 88  # Customize line length
+target-version = "py311"  # Adjust to your Python version
+
+[tool.ruff.format]
+quote-style = "double"  # Use double quotes
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "W"]  # Example: Enable error (E), flake8 (F), bugbear (B), warnings (W)
+ignore = ["E501", "S608"]  # Ignore line length warnings (Black handles this)
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+skip-string-normalization = false  # Keep string quotes consistent
+
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["data", "data.*", 'scripts', 'scripts.*', "app.py", "main.py"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-cov-report=term-missing --cov-fail-under=20"
+testpaths = [
+    "test"
+]
+python_files = [
+    "test_*.py"
+]
+python_functions = [
+    "test_*"
+]

@@ -8,5 +8,3 @@ class GenAIException(HTTPException):
         self.status = "fail"
         self.code= code
         super().__init__(status_code=self.code, detail=self.message)
-
-

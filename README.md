@@ -1,1 +1,1 @@
-# genai-meta-data
+# bot-common

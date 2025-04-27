@@ -9,5 +9,5 @@ class ReturnSuccessSchema(BaseModel):
     """
 
     message: str
-    status="success"
+    status: str = "success"
     data:dict = {}
