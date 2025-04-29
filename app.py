@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from scripts import all_routers
 
 app = FastAPI(
-    description="This is a GenAI API. This is the initial interaction point with the GenAI API, serving as the first level of communication with the user interface.",
+    description="This is a GenAI API. This is the initial interaction point with the GenAI API, serving as the first level of communication with the user interface",
     version="0.1.0",
     title="GenAI API",
     contact={
