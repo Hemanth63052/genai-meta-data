@@ -1,6 +1,10 @@
 import uvicorn
-from scripts.config import ServerConfig
-from scripts.logging import logger
+
+from dotenv import load_dotenv
+
+load_dotenv()
+from adapt_iq_common.config import ServerConfig
+from adapt_iq_common.logging import logger
 from app import app as fastapi_app
 
 if __name__ == "__main__":

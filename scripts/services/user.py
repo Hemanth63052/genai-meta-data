@@ -3,7 +3,7 @@ from fastapi import Depends
 from scripts.handlers.user import UserHandler
 from scripts.schemas.user_schemas import UpdateProfileSchema
 from scripts.services import user_router
-from scripts.utils.authorization_util import Email
+from adapt_iq_common.utils.authorization_util import Email
 
 
 @user_router.get("/profile", tags=["User"])

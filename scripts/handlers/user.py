@@ -1,7 +1,7 @@
-from scripts.exception import GenAIException
+from adapt_iq_common.exceptions import GenAIException
 from scripts.schemas import ReturnSuccessSchema
 from scripts.schemas.user_schemas import UpdateProfileSchema
-from scripts.utils.mongo_util.user import User
+from adapt_iq_common.utils.mongo_util.user import User
 from fastapi import status
 
 

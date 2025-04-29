@@ -1,10 +1,10 @@
-from scripts.config import JWTConfig
-from scripts.exception import GenAIException
+from adapt_iq_common.config import JWTConfig
+from adapt_iq_common.exceptions import GenAIException
 from scripts.schemas import ReturnSuccessSchema
 from scripts.schemas.login_schemas import SignupSchema, LoginSchema, ChangePasswordSchema
-from scripts.utils.access_token_decorator import TokenDecorator
-from scripts.utils.mongo_util.user import User
-from scripts.utils.hash_util import HashUtil
+from adapt_iq_common.utils.access_token_decorator import TokenDecorator
+from adapt_iq_common.utils.mongo_util.user import User
+from adapt_iq_common.utils.hash_util import HashUtil
 from fastapi import Response, Request, status
 
 class LoginHandler:

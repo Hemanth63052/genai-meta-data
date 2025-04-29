@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Security
-from scripts.utils.authorization_util import AuthorizationUtil
+from adapt_iq_common.utils.authorization_util import AuthorizationUtil
 """
 All routers are defined here. Each router is a collection of routes that are grouped together.
 

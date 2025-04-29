@@ -5,7 +5,7 @@ from fastapi import status
 from typing import Optional
 from datetime import datetime, timezone
 
-from scripts.exception import GenAIException
+from adapt_iq_common.exceptions import GenAIException
 
 
 class LoginSchema(BaseModel):

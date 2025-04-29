@@ -1,11 +1,2 @@
-bcrypt>=4.2.1
-cryptography>=39.0.1
-fastapi>=0.115.8
-google-cloud-secret-manager>=2.16.0
-pydantic-settings>=2.7.1
-pydantic[email]>=2.10.6
-PyJWT>=2.10.1
-pymongo>=4.11.1
-python-dotenv>=1.0.1
-redis>=5.2.1
 uvicorn>=0.34.0
+git+https://github.com/Hemanth63052/adapt-iq-common@main
